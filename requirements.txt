@@ -1,0 +1,13 @@
+dotenv
+numpy
+pandas
+scikit-learn
+matplotlib
+geospacepy
+apexpy
+cdasws
+h5py
+opencv-python
+spacepy
+xarray
+cdflib
