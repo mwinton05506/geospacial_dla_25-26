@@ -171,6 +171,10 @@ class SUSSI_Plotter:
         f = plt.figure(figsize=(10, 10), dpi=150)
         ax_1 = f.add_subplot(111, projection="polar")
         ssusi_obs.plot_obs(ax_1, ptsize=1)  # use plotting function to plot
+        # Remove legend
+        for extra_ax in f.axes:
+            if extra_ax != ax_1:
+                f.delaxes(extra_ax)
 
         print(f"Closet time to {enddt} is {ae_time}")
         print(f"AE Index at {ae_time} is {ae_val}")
