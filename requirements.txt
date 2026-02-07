@@ -1,5 +1,5 @@
 dotenv
-numpy
+numpy<2.0
 pandas
 scikit-learn
 matplotlib
@@ -11,3 +11,4 @@ opencv-python
 spacepy
 xarray
 cdflib
+tensorflow[and-cuda]==2.20

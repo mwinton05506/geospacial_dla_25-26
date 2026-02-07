@@ -30,13 +30,14 @@ load_dotenv()
 
 
 class SUSSI_Plotter:
-    def __init__(self, drive_path):
+    def __init__(self, drive_path, end_file="Figures"):
         self.edr_files = []
         self.hemishphere = "S"
         self.radiance_type = "LBHS"
         self.drive_path = drive_path
         self.ae_index = None
         self.meta_data_csv = pd.DataFrame(columns=["Filename", "Datetime", "Satellite", "Hemisphere", "Orbit", "AE_Index", "EDR_File"])
+        self.end_file = end_file
 
     def build_ae_index(self, ae_df):
         # Switch to hour by hour
@@ -171,10 +172,20 @@ class SUSSI_Plotter:
         f = plt.figure(figsize=(10, 10), dpi=150)
         ax_1 = f.add_subplot(111, projection="polar")
         ssusi_obs.plot_obs(ax_1, ptsize=1)  # use plotting function to plot
-        # Remove legend
+        # Remove any extra axes (legend/colorbar axes sometimes get created)
         for extra_ax in f.axes:
             if extra_ax != ax_1:
                 f.delaxes(extra_ax)
+
+        # Always remove legend from the main axes
+        leg = ax_1.get_legend()
+        if leg is not None:
+            leg.remove()
+
+        # Force a square canvas with no margins
+        ax_1.set_aspect("equal", adjustable="box")
+        f.subplots_adjust(left=0, right=1, bottom=0, top=1)
+        ax_1.set_position([0, 0, 1, 1])
 
         print(f"Closet time to {enddt} is {ae_time}")
         print(f"AE Index at {ae_time} is {ae_val}")
@@ -198,12 +209,8 @@ class SUSSI_Plotter:
         }
         self.meta_data_csv = pd.concat([self.meta_data_csv, pd.DataFrame([meta_data_slice])], ignore_index=True)
         date_str = date.strftime("%Y-%m-%d")
-        os.makedirs(os.path.join(self.drive_path, "Figures", date_str), exist_ok=True)
-        file_name = os.path.join(self.drive_path, "Figures", date_str, f"{file_name}.png")
-        if not show_plot_info:
-            leg = ax_1.get_legend()
-            if leg is not None:
-                leg.remove()
+        os.makedirs(os.path.join(self.drive_path, self.end_file, date_str), exist_ok=True)
+        file_name = os.path.join(self.drive_path, self.end_file, date_str, f"{file_name}.png")
         plt.savefig(file_name)
         if not show_plot_info:
             plt.close(f)

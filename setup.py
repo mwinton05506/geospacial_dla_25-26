@@ -15,6 +15,9 @@ def run(cmd):
 
 def main():
     system = platform.system().lower()
+    if system.startswith("win"):
+        print("Detected Windows OS. Need to install fortran compiler separatly")
+        return
 
     print(f"Detected OS: {system}")
 

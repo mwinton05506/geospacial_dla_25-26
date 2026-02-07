@@ -18,7 +18,7 @@ AE_CUTOFF = 200
 
 drive_path = os.getenv("DRIVE_PATH")
 omni = OMNI_Data()
-plotter = SUSSI_Plotter(drive_path)
+plotter = SUSSI_Plotter(drive_path, end_file="figures_non_labeled")
 
 ae_df = omni.get_df_data(["AE1800"], START_DATE, END_DATE)
 ae_df_filtered = ae_df[ae_df["AE1800"] > AE_CUTOFF]
