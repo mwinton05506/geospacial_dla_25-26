@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 drive_path = os.getenv("DRIVE_PATH")
-metadata_path = os.path.join(drive_path, "Figures", "ssusi_metadata.csv")
+metadata_path = os.path.join(drive_path, "figures_non_labeled", "ssusi_metadata.csv")
 metadata = pd.read_csv(metadata_path)
 
 sample = metadata.sample(n=2500, replace=False, ignore_index=True)
@@ -43,6 +43,6 @@ def copy_image_files(image_filenames, source_dir, dest_dir):
 for i in range(10):
     sliced = sample.iloc[i * 250 : (i + 1) * 250]
     image_filenames = sliced["Filename"].tolist()
-    source_dir = os.path.join(drive_path, "Figures")
-    dest_dir = os.path.join(drive_path, "Collected", f"Sample_{i+1}")
+    source_dir = os.path.join(drive_path, "figures_non_labeled")
+    dest_dir = os.path.join(drive_path, "Collected_non_labled", f"Sample_{i+1}")
     copy_image_files(image_filenames, source_dir, dest_dir)
