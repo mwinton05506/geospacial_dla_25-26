@@ -30,11 +30,15 @@ load_dotenv()
 
 
 class SUSSI_Plotter:
-    def __init__(self, drive_path, end_file="Figures"):
+    def __init__(self, drive_path, end_file="Figures", dest_path=None):
         self.edr_files = []
         self.hemishphere = "S"
         self.radiance_type = "LBHS"
         self.drive_path = drive_path
+        if dest_path is not None:
+            self.dest_path = dest_path
+        else:
+            self.dest_path = drive_path
         self.ae_index = None
         self.meta_data_csv = pd.DataFrame(columns=["Filename", "Datetime", "Satellite", "Hemisphere", "Orbit", "AE_Index", "EDR_File"])
         self.end_file = end_file
@@ -209,8 +213,8 @@ class SUSSI_Plotter:
         }
         self.meta_data_csv = pd.concat([self.meta_data_csv, pd.DataFrame([meta_data_slice])], ignore_index=True)
         date_str = date.strftime("%Y-%m-%d")
-        os.makedirs(os.path.join(self.drive_path, self.end_file, date_str), exist_ok=True)
-        file_name = os.path.join(self.drive_path, self.end_file, date_str, f"{file_name}.png")
+        os.makedirs(os.path.join(self.dest_path, self.end_file, date_str), exist_ok=True)
+        file_name = os.path.join(self.dest_path, self.end_file, date_str, f"{file_name}.png")
         plt.savefig(file_name)
         if not show_plot_info:
             plt.close(f)
@@ -326,7 +330,7 @@ class SUSSI_Plotter:
     def save_metadata_csv(self, file_path=None):
         """Save the metadata CSV to disk."""
         if file_path is None:
-            file_path = os.path.join(self.drive_path, "Figures", "ssusi_metadata.csv")
+            file_path = os.path.join(self.dest_path, self.end_file, "ssusi_metadata.csv")
         if os.path.exists(file_path):
             prev_meta = pd.read_csv(file_path)
             self.meta_data_csv = pd.concat([prev_meta, self.meta_data_csv], ignore_index=True)

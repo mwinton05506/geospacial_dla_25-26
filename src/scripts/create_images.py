@@ -16,9 +16,9 @@ END_DATE = "2014-12-31"
 
 AE_CUTOFF = 200
 
-drive_path = os.getenv("DRIVE_PATH")
+drive_path = "/glade/work/krouabhi/Data/"
 omni = OMNI_Data()
-plotter = SUSSI_Plotter(drive_path, end_file="figures_non_labeled")
+plotter = SUSSI_Plotter(drive_path, dest_path="/glade/work/winton/data/images", end_file="edr_images")
 
 ae_df = omni.get_df_data(["AE1800"], START_DATE, END_DATE)
 ae_df_filtered = ae_df[ae_df["AE1800"] > AE_CUTOFF]
