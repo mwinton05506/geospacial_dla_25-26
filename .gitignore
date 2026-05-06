@@ -214,3 +214,11 @@ __marimo__/
 esabin/
 esagrid.py
 __pycache__/
+
+# Data
+data_sample_*/
+
+figs
+logs
+trained_backbones
+backbones
