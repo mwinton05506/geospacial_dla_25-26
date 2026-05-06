@@ -9,7 +9,7 @@ class DenseCL(tf.keras.Model):
     def __init__(
         self, 
         backbone, 
-        momentum=0.999, 
+        momentum=0.9995, 
         temperature=0.2, 
         lambda_weight=0.5,
         queue_size=4096,
@@ -98,28 +98,27 @@ class DenseCL(tf.keras.Model):
         return cls(**config)
 
     def _build_head(self, name, is_dense=False):
-        # Makes the global head (for L_q) or dense head (for L_r) based on the is_dense flag.
         if not is_dense:
-            return Sequential(
-                [
-                    layers.GlobalAveragePooling2D(),
-                    layers.Dense(2048, activation="relu"),
-                    # Drop out is used here to reduce overfitting on the small dataset
-                    layers.Dropout(0.2),
-                    layers.Dense(128),
-                ],
-                name=name,
-            )
+            return Sequential([
+                layers.GlobalAveragePooling2D(),
+                layers.Dense(2048),
+                layers.BatchNormalization(),
+                layers.ReLU(),
+                layers.Dense(2048),
+                layers.BatchNormalization(),
+                layers.ReLU(),
+                layers.Dense(128),
+            ], name=name)
         else:
-            return Sequential(
-                [
-                    layers.Conv2D(2048, (1, 1), activation="relu"),
-                    # Drop out is used here to reduce overfitting on the small dataset
-                    layers.Dropout(0.2),
-                    layers.Conv2D(128, (1, 1)),
-                ],
-                name=name,
-            )
+            return Sequential([
+                layers.Conv2D(2048, (1, 1)),
+                layers.BatchNormalization(),
+                layers.ReLU(),
+                layers.Conv2D(2048, (1, 1)),
+                layers.BatchNormalization(),
+                layers.ReLU(),
+                layers.Conv2D(128, (1, 1)),
+            ], name=name)
 
     def get_dense_correspondence(self, feat_q, feat_k, k_d):
         feat_q_norm = tf.math.l2_normalize(feat_q, axis=-1)
@@ -213,7 +212,7 @@ class DenseCL(tf.keras.Model):
         
         epoch = tf.cast(self.current_epoch, tf.int32)
 
-        with tf.GradientTape() as tape:
+        with tf.GradientTape(persistent=True) as tape:
             # Student forward pass (on query view)
             feat_q = self.backbone(x_q, training=True)
             q_g = tf.math.l2_normalize(self.global_head(feat_q), axis=-1)
@@ -253,17 +252,29 @@ class DenseCL(tf.keras.Model):
             effective_lambda = self.l_weight * progress
             total_loss = (1.0 - effective_lambda) * l_g + effective_lambda * l_d
 
-        train_vars = (
-            self.backbone.trainable_variables
-            + self.global_head.trainable_variables
+        backbone_vars = self.backbone.trainable_variables
+        head_vars = (
+            self.global_head.trainable_variables
             + self.dense_head.trainable_variables
         )
-        grads = tape.gradient(total_loss, train_vars)
-        self.optimizer.apply_gradients(zip(grads, train_vars))
-        
+    
+        # Compute gradients separately
+        backbone_grads = tape.gradient(total_loss, backbone_vars)
+        head_grads = tape.gradient(total_loss, head_vars)
+        del tape
+    
+        # Scale backbone gradients down (effectively lower LR)
+        lr_scale = 0.1  # heads learn 10x faster than backbone
+        backbone_grads = [g * lr_scale if g is not None else g for g in backbone_grads]
+    
+        # Apply all gradients with the single optimizer
+        all_vars = backbone_vars + head_vars
+        all_grads = backbone_grads + head_grads
+        self.optimizer.apply_gradients(zip(all_grads, all_vars))
+    
         self._update_teacher()
         self._dequeue_and_enqueue(k_g)
-
+    
         return {"loss": total_loss, "global": l_g, "dense": l_d}
 
     @tf.function

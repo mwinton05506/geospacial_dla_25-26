@@ -30,10 +30,10 @@ load_dotenv()
 
 
 class SUSSI_Plotter:
-    def __init__(self, drive_path, end_file="Figures", dest_path=None):
+    def __init__(self, drive_path, end_file="Figures", dest_path=None, radiance_type="LBHS"):
         self.edr_files = []
         self.hemishphere = "S"
-        self.radiance_type = "LBHS"
+        self.radiance_type = radiance_type
         self.drive_path = drive_path
         if dest_path is not None:
             self.dest_path = dest_path
@@ -141,7 +141,6 @@ class SUSSI_Plotter:
 
     def plot_erd_file(self, edr_file, show_plot_info, min_ae):
         hemisphere = "S"  # N or S
-        radiance_type = "LBHS"
         orb_match = re.search(r"REV(\d{5})", edr_file)
         if orb_match:
             orbit_num = int(orb_match.group(1))  # get orbit number
@@ -157,7 +156,7 @@ class SUSSI_Plotter:
             edr_file,
             dmsp,
             hemisphere,
-            radiance_type=radiance_type,
+            radiance_type=self.radiance_type,
             noise_removal=False,
             spatial_bin=False,
         )
@@ -195,13 +194,13 @@ class SUSSI_Plotter:
         print(f"AE Index at {ae_time} is {ae_val}")
 
         if show_plot_info:
-            title = f"DMSP {dmsp} {hemisphere} {radiance_type} {dt.month}-{dt.day}-{dt.year} Orbit {orbit_num} Daily AE Index {ae_val}"
+            title = f"DMSP {dmsp} {hemisphere} {self.radiance_type} {dt.month}-{dt.day}-{dt.year} Orbit {orbit_num} Daily AE Index {ae_val}"
             ax_1.set_title(
                 title,
                 fontsize=14,
             )
 
-        file_name = f"{dmsp}_{hemisphere}_{radiance_type}_{enddt.strftime('%Y%m%d%H%M%S')}_{orbit_num}"
+        file_name = f"{dmsp}_{hemisphere}_{self.radiance_type}_{enddt.strftime('%Y%m%d%H%M%S')}_{orbit_num}"
         meta_data_slice = {
             "Filename": file_name,
             "Datetime": enddt,

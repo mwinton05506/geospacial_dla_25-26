@@ -14,11 +14,11 @@ load_dotenv()
 START_DATE = "2011-01-01"
 END_DATE = "2014-12-31"
 
-AE_CUTOFF = 200
+AE_CUTOFF = 170
 
 drive_path = "/glade/work/krouabhi/Data/"
 omni = OMNI_Data()
-plotter = SUSSI_Plotter(drive_path, dest_path="/glade/work/winton/data/images", end_file="edr_images")
+plotter = SUSSI_Plotter(drive_path, dest_path="/glade/work/winton/data/images", end_file="edr_images", radiance_type="LBHL")
 
 ae_df = omni.get_df_data(["AE1800"], START_DATE, END_DATE)
 ae_df_filtered = ae_df[ae_df["AE1800"] > AE_CUTOFF]
@@ -37,3 +37,5 @@ for i, date_chunk in enumerate(date_chunks):
     print(f"Processing chunk {i + 1} of {len(date_chunks)}")
     plotter.plot_midnight_passes_from_dates(date_chunk, False, AE_CUTOFF)
     plotter.save_metadata_csv()
+    with open("status.txt", "a+") as f:
+        f.write(f"\nCompleted chunk {i+1} out of {len(date_chunks)}")
